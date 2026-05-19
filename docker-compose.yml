@@ -3,9 +3,9 @@ version: '3.8'
 services:
   ollama:
     image: ollama/ollama:latest
-    container_name: ollama-pi5
+    container_name: ollama
     volumes:
-      - ollama_data:/root/.ollama
+      - ./ollama_data:/root/.ollama
     ports:
       - "11434:11434"
     restart: unless-stopped
