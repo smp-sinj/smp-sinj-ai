@@ -6,6 +6,7 @@ services:
     container_name: ollama
     volumes:
       - ./ollama_data:/root/.ollama
+      - .:/app
     ports:
       - "11434:11434"
     restart: unless-stopped

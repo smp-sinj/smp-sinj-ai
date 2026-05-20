@@ -1,3 +1,9 @@
+# LLM data and env
+ollama_data/
+.env
+.venv/
+id_ed25519*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
