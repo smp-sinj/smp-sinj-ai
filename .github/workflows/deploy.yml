@@ -13,13 +13,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Étape Magique : Connecte le runner de GitHub à ton Tailscale
+      # Connexion propre avec OAuth (Adieu le Warning et l'erreur de clé)
       - name: Connect to Tailscale
         uses: tailscale/github-action@v3
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
 
-      # Étape classique : Déploiement en SSH via l'IP Tailscale
+      # Déploiement SSH
       - name: Deploy via SSH to Pi 5
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -30,6 +31,6 @@ jobs:
           script: |
             cd /mnt/ssd/Projects/smp-sinj-ai
             git pull origin main
-            docker exec ollama ollama create smp-sinj -f app/Modelfile
+            docker exec ollama ollama create smp-sinj -f /app/Modelfile
             docker compose build --no-cache sinj-bot
             docker compose up -d sinj-bot
