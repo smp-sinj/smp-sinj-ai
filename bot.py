@@ -11,6 +11,13 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
 MODEL_NAME = "smp-sinj"
 
+CONSIGNE_EXPERT = (
+    " MAIS ATTENTION : L'utilisateur t'a demandé une explication technique/de cours. "
+    "Pour cette réponse précise, tu as l'autorisation de faire un long pavé ultra-détaillé, "
+    "mathématique et rigoureux. Ne limite pas tes mots. Par contre, garde ton ton méprisant "
+    "et lâche obligatoirement tes expressions fétiches comme 'dégâts dégâts' ou 'saboteur' au milieu de tes explications."
+)
+
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
@@ -37,21 +44,28 @@ async def on_message(message):
         if not prompt_utilisateur:
             prompt_utilisateur = "wsh"
 
-        # --- LA FEAT : INJECTION DE L'IDENTITÉ ---
-        # On récupère le pseudo de la personne (ex: Menjabin, Alexandre, Raphaël...)
         pseudo_auteur = message.author.display_name
         
         # On formate le prompt pour donner le contexte à Ollama
         prompt_final = f"L'utilisateur {pseudo_auteur} te dit : {prompt_utilisateur}"
-        # ----------------------------------------
+
+        # Gestion du mode "expert" si le flag "explique" est détecté dans le message de l'utilisateur
+        system_prompt = ""
+        if "explique" in prompt_utilisateur.lower():
+            system_prompt = CONSIGNE_EXPERT
+            print(f"🧠 Sinj passe en mode Expert pour {pseudo_auteur}", flush=True)
 
         async with message.channel.typing():
             try:
                 donnees = {
                     "model": MODEL_NAME,
-                    "prompt": prompt_final, # <-- On envoie le prompt avec le pseudo !
+                    "prompt": prompt_final, # On envoie le prompt avec le pseudo !
                     "stream": False
                 }
+                
+                # Si le flag "explique" est détecté, on injecte la consigne dans les paramètres de l'API
+                if system_prompt:
+                    donnees["system"] = system_prompt
                 
                 def faire_requete():
                     return requests.post(OLLAMA_URL, json=donnees, timeout=300)
