@@ -2,63 +2,71 @@ import os
 import discord
 import requests
 import json
+import asyncio
 from dotenv import load_dotenv
-# Configuration
+
 load_dotenv()
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")  # Mets ton token généré ici
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
 MODEL_NAME = "smp-sinj"
 
 intents = discord.Intents.default()
-intents.message_content = True  # Obligatoire pour lire les messages
+intents.message_content = True
 client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"🔥 Sinj AI est en ligne sous le pseudo : {client.user}")
-    print("Prêt à distribuer des dégâts sur le serveur. 💀")
+    print(f"🔥 Sinj AI est en ligne sous le pseudo : {client.user}", flush=True)
+    print("Prêt à cibler ses victimes sur le serveur. 💀", flush=True)
 
 @client.event
 async def on_message(message):
-    # Sécurité : le bot ne doit pas se répondre à lui-même
     if message.author == client.user:
         return
 
-    # Le bot s'active si on l'évoque par son nom 'sinj' ou s'il est directement mentionné
+    # S'active si le bot est mentionné ou si on écrit "sinj"
     if client.user.mentioned_in(message) or "sinj" in message.content.lower():
         
-        # On nettoie le texte pour enlever la mention brute (ex: <@123456789>)
-        prompt_utilisateur = message.content.replace(f"<@!{client.user.id}>", "").replace(f"<@{client.user.id}>", "").strip()
+        # Nettoyage propre de la mention
+        prompt_utilisateur = message.content
+        if client.user.mentioned_in(message):
+            prompt_utilisateur = prompt_utilisateur.replace(f"<@!{client.user.id}>", "").replace(f"<@{client.user.id}>", "")
+        prompt_utilisateur = prompt_utilisateur.strip()
         
-        # Si le message contient juste la mention et rien d'autre, on simule un salut
         if not prompt_utilisateur:
             prompt_utilisateur = "wsh"
 
-        # On affiche l'indicateur "Sinj est en train d'écrire..." sur Discord
+        # --- LA FEAT : INJECTION DE L'IDENTITÉ ---
+        # On récupère le pseudo de la personne (ex: Menjabin, Alexandre, Raphaël...)
+        pseudo_auteur = message.author.display_name
+        
+        # On formate le prompt pour donner le contexte à Ollama
+        prompt_final = f"L'utilisateur {pseudo_auteur} te dit : {prompt_utilisateur}"
+        # ----------------------------------------
+
         async with message.channel.typing():
             try:
-                # Données envoyées à l'API locale d'Ollama
                 donnees = {
                     "model": MODEL_NAME,
-                    "prompt": prompt_utilisateur,
-                    "stream": False  # Desactive le streaming pour envoyer le bloc complet d'un coup
+                    "prompt": prompt_final, # <-- On envoie le prompt avec le pseudo !
+                    "stream": False
                 }
                 
-                # Envoi de la requête au Ollama qui tourne sur le Pi 5
-                requete = requests.post(OLLAMA_URL, json=donnees, timeout=10)
+                def faire_requete():
+                    return requests.post(OLLAMA_URL, json=donnees, timeout=120)
+                
+                requete = await asyncio.to_thread(faire_requete)
                 
                 if requete.status_code == 200:
                     reponse_json = requete.json()
                     replique_bot = reponse_json.get("response", "J'ai buggé, saboteur. 💀")
-                    
-                    # On répond directement sous le message de la personne
                     await message.reply(replique_bot)
                 else:
                     await message.reply("Ollama répond pas, gros saboteur. 😮‍💨")
                     
             except Exception as erreur:
-                print(f"Erreur système : {erreur}")
+                print(f"Erreur système : {erreur}", flush=True)
                 await message.reply("Erreur de connexion avec mon cerveau. 💀")
 
 client.run(DISCORD_TOKEN)

@@ -19,7 +19,7 @@ services:
     env_file:
       - .env
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=http://ollama:11434/api/generate
     restart: unless-stopped
 
 volumes:
