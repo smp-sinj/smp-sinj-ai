@@ -30,6 +30,6 @@ jobs:
           script: |
             cd /mnt/ssd/Projects/smp-sinj-ai
             git pull origin main
-            docker exec -it ollama ollama create smp-sinj -f app/Modelfile
+            docker exec ollama ollama create smp-sinj -f app/Modelfile
             docker compose build --no-cache sinj-bot
             docker compose up -d sinj-bot
