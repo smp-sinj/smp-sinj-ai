@@ -54,7 +54,7 @@ async def on_message(message):
                 }
                 
                 def faire_requete():
-                    return requests.post(OLLAMA_URL, json=donnees, timeout=120)
+                    return requests.post(OLLAMA_URL, json=donnees, timeout=300)
                 
                 requete = await asyncio.to_thread(faire_requete)
                 

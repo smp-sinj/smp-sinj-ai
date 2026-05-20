@@ -1,0 +1,35 @@
+name: Deploy Sinj Bot via Tailscale
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Étape Magique : Connecte le runner de GitHub à ton Tailscale
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+
+      # Étape classique : Déploiement en SSH via l'IP Tailscale
+      - name: Deploy via SSH to Pi 5
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PI_HOST }}
+          username: ${{ secrets.PI_USERNAME }}
+          key: ${{ secrets.PI_SSH_KEY }}
+          port: 22
+          script: |
+            cd /mnt/ssd/Projects/smp-sinj-ai
+            git pull origin main
+            docker exec -it ollama ollama create smp-sinj -f app/Modelfile
+            docker compose build --no-cache sinj-bot
+            docker compose up -d sinj-bot
