@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir discord.py requests python-dotenv
 
 # Copie du code
 COPY bot.py .
+COPY Modelfile .
 
 # Commande de lancement
 CMD ["python", "bot.py"]
