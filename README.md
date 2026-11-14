@@ -14,6 +14,10 @@ Deux backends d'inférence au choix :
 
 Après chaque réponse, le bot fait un second appel au modèle (prompt d'extraction dédié, `temperature 0`, réponse JSON stricte) pour décider **lui-même** si le message contient quelque chose à retenir (nouvelle expression, fait sur un membre, lore...). Si oui, c'est écrit dans `mémoire.md` (ignoré par git, persisté via le volume compose) et réinjecté dans le prompt système à chaque message suivant. Les doublons sont filtrés et le fichier est plafonné à `MAX_MEMOIRES` lignes. Désactivable avec `MEMOIRE_AUTO=false`.
 
+## Réponses plus développées + contexte
+
+Le persona autorise désormais des réponses développées (~80 mots) quand la question le mérite, tout en gardant le ton cassant (règle 2 du `Modelfile`). Un historique des `HISTORIQUE_MAX` derniers messages du salon (défaut 8, `0` = désactivé) est aussi injecté dans le prompt pour donner du contexte. Pour un modèle plus puissant : `MISTRAL_MODEL=mistral-medium-latest`.
+
 ## Déploiement
 
 Push sur `main` : l'action GitHub déploie sur le Pi 5 via Tailscale + docker compose.

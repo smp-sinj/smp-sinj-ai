@@ -22,8 +22,11 @@ BACKEND = os.getenv("BACKEND") or ("mistral" if MISTRAL_API_KEY else "ollama")
 MEMOIRE_FILE = os.getenv("MEMOIRE_FILE") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "mémoire.md")
 MEMOIRE_AUTO = os.getenv("MEMOIRE_AUTO", "true").lower() in ("1", "true", "oui")
 MAX_MEMOIRES = int(os.getenv("MAX_MEMOIRES", "200"))
+HISTORIQUE_MAX = int(os.getenv("HISTORIQUE_MAX", "8"))
 
 VERROU_MEMOIRE = threading.Lock()
+HISTORIQUE = {}
+VERROU_HISTORIQUE = threading.Lock()
 
 
 def charger_personnalite():
@@ -83,6 +86,14 @@ def enregistrer_memoire(texte, auteur):
         if len(lignes) > MAX_MEMOIRES:
             with open(MEMOIRE_FILE, "w", encoding="utf-8") as f:
                 f.writelines(lignes[-MAX_MEMOIRES:])
+
+
+def contexte_recent(channel_id):
+    with VERROU_HISTORIQUE:
+        hist = list(HISTORIQUE.get(channel_id, []))
+    if not hist:
+        return ""
+    return "Contexte récent du salon :\n" + "\n".join(hist)
 
 
 def extraire_et_sauvegarder(auteur, message_utilisateur, reponse_bot):
@@ -152,6 +163,13 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if HISTORIQUE_MAX > 0:
+        with VERROU_HISTORIQUE:
+            hist = HISTORIQUE.setdefault(message.channel.id, [])
+            hist.append(f"{message.author.display_name}: {message.content[:200]}")
+            while len(hist) > HISTORIQUE_MAX:
+                hist.pop(0)
+
     # S'active si le bot est mentionné ou si on écrit "sinj"
     if client.user.mentioned_in(message) or "sinj" in message.content.lower():
 
@@ -176,6 +194,7 @@ async def on_message(message):
             print(f"🧠 Sinj passe en mode Expert pour {pseudo_auteur}", flush=True)
 
         memoires = lire_memoires()
+        contexte = contexte_recent(message.channel.id)
 
         async with message.channel.typing():
             try:
@@ -186,6 +205,8 @@ async def on_message(message):
                             messages.append({"role": "system", "content": PERSONNALITE})
                         if memoires:
                             messages.append({"role": "system", "content": f"Mémoires apprises jusqu'ici (utilise-les si pertinent) :\n{memoires}"})
+                        if contexte:
+                            messages.append({"role": "system", "content": contexte})
                         if system_prompt:
                             messages.append({"role": "system", "content": system_prompt})
                         messages.append({"role": "user", "content": prompt_final})
@@ -202,7 +223,7 @@ async def on_message(message):
                         )
                     donnees = {
                         "model": MODEL_NAME,
-                        "prompt": (f"Mémoires apprises jusqu'ici :\n{memoires}\n\n" if memoires else "") + prompt_final,
+                        "prompt": (f"Mémoires apprises jusqu'ici :\n{memoires}\n\n" if memoires else "") + (contexte + "\n\n" if contexte else "") + prompt_final,
                         "stream": False
                     }
                     if system_prompt:
