@@ -9,6 +9,9 @@ services:
       - .:/app
     ports:
       - "11434:11434"
+    dns:
+      - 1.1.1.1
+      - 9.9.9.9
     restart: unless-stopped
 
   sinj-bot:
@@ -22,6 +25,9 @@ services:
       - .env
     environment:
       - OLLAMA_URL=http://ollama:11434/api/generate
+    dns:
+      - 1.1.1.1
+      - 9.9.9.9
     restart: unless-stopped
 
 volumes:
