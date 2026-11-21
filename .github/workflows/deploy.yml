@@ -30,7 +30,9 @@ jobs:
           key: ${{ secrets.PI_SSH_KEY }}
           port: 22
           script: |
+            set -e
             cd /mnt/ssd/Projects/smp-sinj-ai
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             docker compose build --no-cache sinj-bot
             docker compose up -d --no-deps sinj-bot
