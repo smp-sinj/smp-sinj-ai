@@ -1,6 +1,7 @@
 # LLM data and env
 ollama_data/
 .env
+mémoire.md
 .venv/
 id_ed25519*
 

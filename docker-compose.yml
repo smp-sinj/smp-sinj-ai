@@ -16,6 +16,8 @@ services:
     container_name: sinj-discord-bot
     depends_on:
       - ollama
+    volumes:
+      - .:/app
     env_file:
       - .env
     environment:
