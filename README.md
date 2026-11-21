@@ -18,6 +18,12 @@ Après chaque réponse, le bot fait un second appel au modèle (prompt d'extract
 
 Le persona autorise désormais des réponses développées (~80 mots) quand la question le mérite, tout en gardant le ton cassant (règle 2 du `Modelfile`). Un historique des `HISTORIQUE_MAX` derniers messages du salon (défaut 8, `0` = désactivé) est aussi injecté dans le prompt pour donner du contexte. Pour un modèle plus puissant : `MISTRAL_MODEL=mistral-medium-latest`.
 
+## DNS (Pi-hole)
+
+`sinj-bot` tourne en `network_mode: host` : il utilise directement le `resolv.conf` du Pi (1.1.1.1/9.9.9.9), donc il ne dépend pas de Pi-hole (qui redirige le port 53 des conteneurs mais n'a pas d'upstream configuré → `Temporary failure in name resolution` vers la gateway Discord). `ollama` (optionnel, backend local) garde des DNS fixés 1.1.1.1/9.9.9.9.
+
+Le déploiement GitHub Actions passe par Tailscale : le Pi doit être en ligne et tagué `tag:server` dans le tailnet, avec une ACL `tag:server -> tag:server:22`, et le secret `PI_HOST` doit être son nom ts.net ou son IP 100.x.
+
 ## Déploiement
 
 Push sur `main` : l'action GitHub déploie sur le Pi 5 via Tailscale + docker compose.
