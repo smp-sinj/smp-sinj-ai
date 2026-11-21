@@ -20,7 +20,9 @@ Le persona autorise désormais des réponses développées (~80 mots) quand la q
 
 ## DNS (Pi-hole)
 
-Si le Pi tourne derrière Pi-hole, les conteneurs `sinj-bot` et `ollama` ont des DNS fixés (1.1.1.1, 9.9.9.9) dans `docker-compose.yml` pour ne pas dépendre de Pi-hole (sinon : `Temporary failure in name resolution` vers la gateway Discord et l'API ne répond plus).
+`sinj-bot` tourne en `network_mode: host` : il utilise directement le `resolv.conf` du Pi (1.1.1.1/9.9.9.9), donc il ne dépend pas de Pi-hole (qui redirige le port 53 des conteneurs mais n'a pas d'upstream configuré → `Temporary failure in name resolution` vers la gateway Discord). `ollama` (optionnel, backend local) garde des DNS fixés 1.1.1.1/9.9.9.9.
+
+Le déploiement GitHub Actions passe par Tailscale : le Pi doit être en ligne et tagué `tag:server` dans le tailnet, avec une ACL `tag:server -> tag:server:22`, et le secret `PI_HOST` doit être son nom ts.net ou son IP 100.x.
 
 ## Déploiement
 
