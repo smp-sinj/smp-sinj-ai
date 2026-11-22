@@ -34,5 +34,5 @@ jobs:
             cd /mnt/ssd/Projects/smp-sinj-ai
             git fetch origin main
             git reset --hard origin/main
-            docker compose build --no-cache sinj-bot
+            docker build --network host --no-cache -t smp-sinj-ai-sinj-bot .
             docker compose up -d --no-deps sinj-bot

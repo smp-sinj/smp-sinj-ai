@@ -26,4 +26,4 @@ Le déploiement GitHub Actions passe par Tailscale : le Pi doit être en ligne e
 
 ## Déploiement
 
-Push sur `main` : l'action GitHub déploie sur le Pi 5 via Tailscale + docker compose.
+Push sur `main` : l'action GitHub déploie sur le Pi 5 via Tailscale. Le build se fait avec `docker build --network host` (sinon le DNS du conteneur de build est redirigé vers Pi-hole, qui n'a pas d'upstream → le `pip install` échoue) ; le Pi est aligné sur `origin/main` via `git reset --hard` et `set -e` rend le run rouge en cas d'erreur.
